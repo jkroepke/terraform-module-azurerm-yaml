@@ -1,0 +1,16 @@
+---
+name: vnet-yaml-euw-01
+resource_group_name: rg-yaml-euw-01
+address_space: ["10.0.0.0/16"]
+dns_servers: ["10.0.0.4", "10.0.0.5"]
+subnets:
+  subnet1:
+    address_prefixes: ["10.0.1.0/24"]
+    delegations:
+      delegation:
+        services:
+          Microsoft.ContainerInstance/containerGroups:
+            actions: ["Microsoft.Network/virtualNetworks/subnets/join/action", "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action"]
+  subnet2:
+    address_prefixes: ["10.0.2.0/24"]
+    route_table: rt-shared-euw-01

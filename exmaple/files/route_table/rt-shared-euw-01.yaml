@@ -1,0 +1,14 @@
+---
+name: rt-shared-euw-01
+resource_group_name: rg-yaml-euw-01
+routes:
+  internet:
+    address_prefix: 0.0.0.0/0
+    next_hop_type: Internet
+  blackhole:
+    address_prefix: 10.0.0.0/32
+    next_hop_type: None
+  fw:
+    address_prefix: 10.0.0.1/32
+    next_hop_type: VirtualNetworkGateway
+    next_hop_in_ip_address: 10.0.0.0
