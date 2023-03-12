@@ -10,7 +10,7 @@ subnets:
       delegation:
         services:
           Microsoft.ContainerInstance/containerGroups:
-            actions: ["Microsoft.Network/virtualNetworks/subnets/join/action", "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action"]
+            actions: ["Microsoft.Network/virtualNetworks/subnets/action"]
   subnet2:
     address_prefixes: ["10.0.2.0/24"]
-    route_table: rt-shared-euw-01
+    route_table_id: rt-shared-euw-01

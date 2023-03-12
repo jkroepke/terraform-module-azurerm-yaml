@@ -1,0 +1,20 @@
+name: sg-yaml-euw-02
+resource_group_name: rg-yaml-euw-01
+rules:
+  test123:
+    priority: 100
+    direction: Outbound
+    access: Allow
+    protocol: Tcp
+    source_port_range: "*"
+    destination_address_prefix: "*"
+    destination_port_range: "*"
+  test1234:
+    priority: 101
+    direction: Outbound
+    access: Allow
+    protocol: Tcp
+    source_port_range: "*"
+    destination_address_prefix: "*"
+    destination_port_range: "*"
+
