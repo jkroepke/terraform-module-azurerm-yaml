@@ -1,7 +1,19 @@
 locals {
   network_security_groups_yaml = [for file in fileset("", "${var.yaml_root}/network_security_group/*.yaml") : yamldecode(file(file))]
   network_security_groups      = { for yaml in local.network_security_groups_yaml : "${yaml.resource_group_name}/${yaml.name}" => yaml }
-  network_security_groups_rules = [
+  network_security_groups_iam = { for role_assignment in flatten([
+    for name, options in local.network_security_groups : [
+      for role, role_assignments in try(options.iam, {}) : [
+        for role_assignment_name, role_assignment in role_assignments : merge({
+          network_security_group_name = azurerm_network_security_group.this[name].name
+          resource_group_name         = azurerm_network_security_group.this[name].resource_group_name
+          scope                       = azurerm_network_security_group.this[name].id
+          role_definition_name        = role
+        }, role_assignment)
+      ]
+    ]
+  ]) : "${role_assignment.resource_group_name}/${role_assignment.network_security_group_name}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
+  network_security_groups_rules = { for rule in flatten([
     for name, options in local.network_security_groups : [
       for subname, subresource in try(options.rules, {}) : merge({
         name                        = subname
@@ -9,7 +21,7 @@ locals {
         resource_group_name         = azurerm_network_security_group.this[name].resource_group_name
       }, subresource)
     ]
-  ]
+  ]) : "${rule.resource_group_name}/${rule.network_security_group_name}/${rule.name}" => rule }
 }
 
 resource "azurerm_network_security_group" "this" {
@@ -18,8 +30,12 @@ resource "azurerm_network_security_group" "this" {
   name = each.value.name
 
   resource_group_name = contains(keys(azurerm_resource_group.this), each.value.resource_group_name) ? azurerm_resource_group.this[each.value.resource_group_name].name : each.value.resource_group_name
-  location            = try(each.value.location, var.default_location)
-  tags                = merge(try(each.value.tags, {}), var.default_tags)
+  location = try(each.value.location, (
+    contains(keys(azurerm_resource_group.this), each.value.resource_group_name)
+    ? azurerm_resource_group.this[each.value.resource_group_name].location
+    : var.default_location
+  ))
+  tags = merge(try(each.value.tags, {}), var.default_tags)
 
   lifecycle {
     ignore_changes = [security_rule]
@@ -27,9 +43,7 @@ resource "azurerm_network_security_group" "this" {
 }
 
 resource "azurerm_network_security_rule" "this" {
-  for_each = {
-    for rule in flatten(local.network_security_groups_rules) : "${rule.resource_group_name}/${rule.network_security_group_name}/${rule.name}" => rule
-  }
+  for_each = local.network_security_groups_rules
 
   name        = each.value.name
   description = try(each.value.description, null)
@@ -51,6 +65,18 @@ resource "azurerm_network_security_rule" "this" {
   destination_address_prefixes               = try(each.value.destination_address_prefixes, null)
   source_application_security_group_ids      = try(each.value.source_application_security_group_ids, null)
   destination_application_security_group_ids = try(each.value.destination_application_security_group_ids, null)
+}
+
+resource "azurerm_role_assignment" "azurerm_network_security_group" {
+  for_each = local.network_security_groups_iam
+
+  scope                                  = each.value.scope
+  role_definition_name                   = each.value.role_definition_name
+  principal_id                           = each.value.principal_id
+  condition                              = try(each.value.condition, null)
+  condition_version                      = try(each.value.condition_version, null)
+  delegated_managed_identity_resource_id = try(each.value.delegated_managed_identity_resource_id, null)
+  skip_service_principal_aad_check       = try(each.value.skip_service_principal_aad_check, null)
 }
 
 output "azurerm_network_security_group" {

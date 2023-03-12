@@ -1,0 +1,6 @@
+{{- $azurerm_storage_account := (index (ds "terraform").provider_schemas "registry.terraform.io/hashicorp/azurerm").resource_schemas.azurerm_storage_account -}}
+
+resource "azurerm_storage_account" "this" {
+  for_each = local.storage_accounts
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_storage_account" $azurerm_storage_account "" false) }}
+}

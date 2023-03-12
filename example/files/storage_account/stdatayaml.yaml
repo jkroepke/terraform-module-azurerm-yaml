@@ -1,0 +1,14 @@
+---
+name: "stdatayaml"
+resource_group_name: rg-yaml-euw-01
+account_tier: "Standard"
+account_replication_type: "LRS"
+identity:
+  type: 'SystemAssigned'
+network_rules:
+  default_action: "Deny"
+  ip_rules: ["127.0.0.1"]
+iam:
+  Reader:
+    jok:
+      principal_id: "e1608e24-0728-4efd-ba5b-a05693b53c5a"

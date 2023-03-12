@@ -1,0 +1,93 @@
+{{- define "resource_attributes" }}
+  {{- $resource_name := (index . 0) }}
+  {{- $resource := (index . 1) }}
+  {{- $prefix := (index . 2) }}
+  {{- $multi_block := (index . 3) }}
+
+  {{- if has $resource.block "attributes" }}
+    {{- range $key, $options := $resource.block.attributes }}
+      {{- if eq $key "id" }}
+      {{- else if eq $key "admin_password" }}
+        {{- tmpl.Exec "attribute.admin_password" }}
+      {{- else if eq $key "subnet_id" }}
+        {{- tmpl.Exec "attribute.subnet_id" $prefix }}
+      {{- else if eq $key "resource_group_name" }}
+        {{- tmpl.Exec "attribute.resource_group_name" }}
+      {{- else if eq $key "location" }}
+        {{- tmpl.Exec "attribute.location" }}
+      {{- else if eq $key "tags" }}
+        {{- tmpl.Exec "attribute.tags" }}
+      {{- else if eq $key "network_interface_ids" }}
+        {{- tmpl.Exec (printf "attribute.%s.network_interface_ids" $resource_name) }}
+      {{- else if and (eq $key "name") $multi_block}}
+        name = {{ $prefix | default "each" }}.key
+      {{- else }}
+        {{- if or (not (has $options "computed")) (has $options "optional") }}
+          {{ $key }} = {{ if has $options "optional" }}try({{ end }}{{ $prefix | default "each" }}.value.{{ $key }}{{ if has $options "optional" }}, null){{ end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- tmpl.Exec "resource_blocks" (coll.Slice $resource_name $resource $prefix) }}
+{{- end }}
+
+{{- define "resource_blocks" }}
+  {{- $resource_name := (index . 0) }}
+  {{- $resource := (index . 1) }}
+  {{- $prefix := (index . 2) }}
+  {{- if has $resource.block "block_types" }}
+    {{- range $key, $options := $resource.block.block_types }}
+      {{- if and (not (has $options "computed")) (not (eq $key "timeouts")) }}
+
+dynamic "{{ $key }}" {
+        {{- if and (has $options "max_items") (eq $options.max_items 1) }}
+  for_each = contains(keys({{ $prefix | default "each" }}.value), "{{ $key }}") ? {1 : {{ $prefix | default "each" }}.value.{{ $key }}} : {}
+        {{- else }}
+  for_each = contains(keys({{ $prefix | default "each" }}.value), "{{ $key }}") ? {{ $prefix | default "each" }}.value.{{ $key }} : {}
+        {{- end }}
+  content {
+{{- tmpl.Exec "resource_attributes" (coll.Slice $resource_name $options $key (not (and (has $options "max_items") (eq $options.max_items 1)))) }}
+  }
+}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+
+{{- define "attribute.resource_group_name" }}
+resource_group_name = contains(keys(azurerm_resource_group.this), each.value.resource_group_name) ? azurerm_resource_group.this[each.value.resource_group_name].name : each.value.resource_group_name
+{{- end }}
+{{- define "attribute.location" }}
+location = try(each.value.location, (
+  contains(keys(azurerm_resource_group.this), each.value.resource_group_name)
+    ? azurerm_resource_group.this[each.value.resource_group_name].location
+    : var.default_location
+))
+{{- end }}
+{{- define "attribute.subnet_id" }}
+{{- $prefix := . }}
+subnet_id = (contains(keys(azurerm_subnet.this), {{ $prefix | default "each" }}.value.subnet_id)
+    ? azurerm_subnet.this[{{ $prefix | default "each" }}.value.subnet_id].id
+    : {{ $prefix | default "each" }}.value.subnet_id
+)
+{{- end }}
+
+{{- define "attribute.tags" }}
+tags = merge(try(each.value.tags, {}), var.default_tags)
+{{- end }}
+
+
+{{- define "attribute.admin_password" }}
+admin_password = (contains(keys(random_password.this), each.key)
+  ? random_password.this[each.key].result
+  : each.value.admin_password)
+{{- end }}
+
+{{- define "attribute.azurerm_windows_virtual_machine.network_interface_ids" }}
+network_interface_ids = concat(
+  [for nic, _ in local.windows_virtual_machines_network_interface: azurerm_network_interface.azurerm_windows_virtual_machine[nic].id],
+  try(each.value.network_interface_ids, [])
+)
+{{- end }}
+

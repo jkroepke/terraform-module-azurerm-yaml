@@ -1,0 +1,13 @@
+---
+name: privatelink.blob.core.windows.net
+resource_group_name: rg-yaml-euw-01
+virtual_network_links:
+  vnet-yaml-euw-01:
+    virtual_network_id: rg-yaml-euw-01/vnet-yaml-euw-01
+  vnet-yaml-euw-02:
+    virtual_network_id: rg-yaml-euw-01/vnet-yaml-euw-02
+    registration_enabled: true
+iam:
+  Reader:
+    jok:
+      principal_id: "e1608e24-0728-4efd-ba5b-a05693b53c5a"

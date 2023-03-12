@@ -1,0 +1,22 @@
+name: vm-yl-euw-01
+resource_group_name: rg-yaml-euw-01
+size: Standard_B2s
+admin_username: azureadmin
+network_interfaces:
+  default:
+    ip_configuration:
+      default:
+        private_ip_address_allocation: Dynamic
+        subnet_id: rg-yaml-euw-01/vnet-yaml-euw-01/subnet2
+os_disk:
+  caching: ReadWrite
+  storage_account_type: Standard_LRS
+source_image_reference:
+  publisher: MicrosoftWindowsServer
+  offer: WindowsServer
+  sku: 2019-Datacenter
+  version: latest
+iam:
+  Reader:
+    jok:
+      principal_id: "e1608e24-0728-4efd-ba5b-a05693b53c5a"

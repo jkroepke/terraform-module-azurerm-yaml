@@ -1,25 +1,27 @@
 ---
-name: vnet-yaml-euw-01
+name: vnet-yaml-euw-02
 resource_group_name: rg-yaml-euw-01
-address_space: ["10.0.0.0/16"]
-dns_servers: ["10.0.0.4", "10.0.0.5"]
+address_space: ["10.1.0.0/16"]
+dns_servers: ["10.1.0.4", "10.1.0.5"]
 subnets:
   subnet1:
-    address_prefixes: ["10.0.1.0/24"]
+    address_prefixes: ["10.1.1.0/24"]
     delegations:
       delegation:
         services:
           Microsoft.ContainerInstance/containerGroups:
             actions: ["Microsoft.Network/virtualNetworks/subnets/action"]
   subnet2:
-    address_prefixes: ["10.0.2.0/24"]
+    address_prefixes: ["10.1.2.0/24"]
     route_table_id: rg-yaml-euw-01/rt-shared-euw-01
 peerings:
-  vnet-yaml-euw-02:
-    remote_virtual_network_id: rg-yaml-euw-01/vnet-yaml-euw-02
+  vnet-yaml-euw-01:
+    remote_virtual_network_id: rg-yaml-euw-01/vnet-yaml-euw-01
     resource_group_name: rg-yaml-euw-01
     allow_virtual_network_access: true
-    allow_gateway_transit: true
+    allow_forwarded_traffic: true
+    allow_gateway_transit: false
+    use_remote_gateways: false
 iam:
   Reader:
     jok:

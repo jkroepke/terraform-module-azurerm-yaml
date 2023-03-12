@@ -6,6 +6,7 @@ rules:
     direction: Outbound
     access: Allow
     protocol: Tcp
+    source_address_prefix: "*"
     source_port_range: "*"
     destination_address_prefix: "*"
     destination_port_range: "*"
@@ -14,7 +15,11 @@ rules:
     direction: Outbound
     access: Allow
     protocol: Tcp
+    source_address_prefix: "*"
     source_port_range: "*"
     destination_address_prefix: "*"
     destination_port_range: "*"
-
+iam:
+  Reader:
+    jok:
+      principal_id: "e1608e24-0728-4efd-ba5b-a05693b53c5a"

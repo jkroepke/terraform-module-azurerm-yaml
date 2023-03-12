@@ -12,3 +12,7 @@ routes:
     address_prefix: 10.0.0.1/32
     next_hop_type: VirtualAppliance
     next_hop_in_ip_address: 10.0.0.0
+iam:
+  Reader:
+    jok:
+      principal_id: "e1608e24-0728-4efd-ba5b-a05693b53c5a"
