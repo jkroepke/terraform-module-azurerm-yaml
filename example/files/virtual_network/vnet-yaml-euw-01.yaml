@@ -13,4 +13,4 @@ subnets:
             actions: ["Microsoft.Network/virtualNetworks/subnets/action"]
   subnet2:
     address_prefixes: ["10.0.2.0/24"]
-    route_table_id: rt-shared-euw-01
+    route_table_id: rg-yaml-euw-01/rt-shared-euw-01

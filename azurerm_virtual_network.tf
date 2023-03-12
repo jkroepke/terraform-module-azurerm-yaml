@@ -1,12 +1,12 @@
 locals {
   virtual_networks_yaml = [for file in fileset("", "${var.yaml_root}/virtual_network/*.yaml") : yamldecode(file(file))]
-  virtual_networks      = { for yaml in local.virtual_networks_yaml : yaml.name => yaml }
+  virtual_networks      = { for yaml in local.virtual_networks_yaml : "${yaml.resource_group_name}/${yaml.name}" => yaml }
   virtual_networks_subnets = [
-    for yaml in local.virtual_networks_yaml : [
-      for name, subresource in try(yaml.subnets, {}) : merge({
-        name                 = name
-        virtual_network_name = azurerm_virtual_network.this[yaml.name].name
-        resource_group_name  = azurerm_virtual_network.this[yaml.name].resource_group_name
+    for name, options in local.virtual_networks : [
+      for subname, subresource in try(options.subnets, {}) : merge({
+        name                 = subname
+        virtual_network_name = azurerm_virtual_network.this[name].name
+        resource_group_name  = azurerm_virtual_network.this[name].resource_group_name
       }, subresource)
     ]
   ]
@@ -31,7 +31,7 @@ resource "azurerm_virtual_network" "this" {
 
 resource "azurerm_subnet" "this" {
   for_each = {
-    for subnet in flatten(local.virtual_networks_subnets) : "${subnet.virtual_network_name}|${subnet.name}" => subnet
+    for subnet in flatten(local.virtual_networks_subnets) : "${subnet.resource_group_name}/${subnet.virtual_network_name}/${subnet.name}" => subnet
   }
 
   address_prefixes     = each.value.address_prefixes
@@ -65,35 +65,35 @@ resource "azurerm_subnet" "this" {
 resource "azurerm_subnet_route_table_association" "this" {
   for_each = {
     for subnet in flatten(local.virtual_networks_subnets) :
-    "${subnet.virtual_network_name}|${subnet.name}|${subnet.route_table_id}" => subnet
-    if try(subnet.route_table_id, subnet.route_table, null) != null
+    "${subnet.resource_group_name}/${subnet.virtual_network_name}/${subnet.name}/${subnet.route_table_id}" => subnet
+    if try(subnet.route_table_id, null) != null
   }
 
   route_table_id = (
     can(each.value.route_table_id)
     ? (
-      startswith(each.value.route_table_id, "/")
-      ? each.value.route_table_id
+      can(azurerm_route_table.this[each.value.route_table_id].id)
+      ? azurerm_route_table.this[each.value.route_table_id].id
       : (
-        contains(keys(azurerm_network_security_group.this), each.value.route_table_id)
-        ? azurerm_route_table.this[each.value.route_table_id].id
-        : data.azurerm_route_table.subnet_route_table_association[each.value.route_table_id].id
+        can(data.azurerm_route_table.subnet_route_table_association[each.value.route_table_id].id)
+        ? data.azurerm_route_table.subnet_route_table_association[each.value.route_table_id].id
+        : each.value.route_table_id
       )
     )
     : null
   )
 
-  subnet_id = azurerm_subnet.this["${each.value.virtual_network_name}|${each.value.name}"].id
+  subnet_id = azurerm_subnet.this["${each.value.resource_group_name}/${each.value.virtual_network_name}/${each.value.name}"].id
 }
 
 data "azurerm_route_table" "subnet_route_table_association" {
   for_each = {
-    for subnet in flatten(local.virtual_networks_subnets) : "${subnet.resource_group_name}/${subnet.route_table_id}" => subnet
-    if(can(subnet.route_table_id) && !startswith(try(subnet.route_table, ""), "/") && !contains(keys(azurerm_route_table.this), try(subnet.route_table, "")))
+    for subnet in flatten(local.virtual_networks_subnets) : subnet.route_table_id => subnet
+    if(can(subnet.route_table_id) && !startswith(try(subnet.route_table_id, ""), "/") && !contains(keys(azurerm_route_table.this), try(subnet.route_table_id, "")))
   }
 
-  name                = each.value.route_table_id
-  resource_group_name = each.value.resource_group_name
+  name                = split(each.value.route_table_id, "/")[1]
+  resource_group_name = split(each.value.route_table_id, "/")[0]
 }
 
 
