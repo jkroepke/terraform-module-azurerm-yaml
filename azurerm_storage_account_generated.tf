@@ -111,8 +111,15 @@ resource "azurerm_storage_account" "this" {
   dynamic "identity" {
     for_each = contains(keys(each.value), "identity") ? { 1 : each.value.identity } : {}
     content {
-      identity_ids = try(identity.value.identity_ids, null)
-      type         = identity.value.type
+      identity_ids = (contains(keys(identity.value), "identity_ids")
+        ? [for id in identity.value.identity_ids : (
+          contains(keys(azurerm_user_assigned_identity.this), id)
+          ? azurerm_user_assigned_identity.this[id].id
+          : id
+        )]
+        : null
+      )
+      type = identity.value.type
     }
   }
 

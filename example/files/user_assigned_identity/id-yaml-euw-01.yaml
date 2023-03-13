@@ -1,13 +1,11 @@
 ---
-name: "stdatayaml"
+name: id-yaml-euw-01
 resource_group_name: rg-yaml-euw-01
-account_tier: "Standard"
-account_replication_type: "LRS"
-identity:
-  type: 'SystemAssigned'
-network_rules:
-  default_action: "Deny"
-  ip_rules: ["127.0.0.1"]
+federated_identity_credentials:
+  example:
+    audience: ["foo"]
+    issuer: "https://foo"
+    subject: "foo"
 iam:
   Reader:
     jok:

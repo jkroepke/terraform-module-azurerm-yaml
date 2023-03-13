@@ -23,6 +23,7 @@ Take a look at the [example](./example) folder to see this module in action.
 * Storage Account
 * Network Security Groups
 * Windows Virtual Machines
+* User Assigned Identity 
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

@@ -22,15 +22,18 @@ locals {
       }, subresource)
     ]
   ]
-  virtual_networks_peerings = [
-    for name, options in local.virtual_networks : [
-      for subname, subresource in try(options.peerings, {}) : merge({
-        name                 = subname
-        virtual_network_name = azurerm_virtual_network.this[name].name
-        resource_group_name  = azurerm_virtual_network.this[name].resource_group_name
-      }, subresource)
-    ]
-  ]
+  virtual_networks_peerings = {
+    for peering in flatten([
+      for name, options in local.virtual_networks : [
+        for subname, subresource in try(options.peerings, {}) : merge({
+          name                 = subname
+          virtual_network_name = azurerm_virtual_network.this[name].name
+          resource_group_name  = azurerm_virtual_network.this[name].resource_group_name
+        }, subresource)
+      ]
+    ]) :
+    "${peering.resource_group_name}/${peering.virtual_network_name}/${peering.name}" => peering
+  }
 }
 
 resource "azurerm_virtual_network" "this" {
@@ -118,10 +121,7 @@ data "azurerm_route_table" "subnet_route_table_association" {
 }
 
 resource "azurerm_virtual_network_peering" "this" {
-  for_each = {
-    for peering in flatten(local.virtual_networks_peerings) :
-    "${peering.resource_group_name}/${peering.virtual_network_name}/${peering.name}" => peering
-  }
+  for_each = local.virtual_networks_peerings
 
   name                 = each.value.name
   resource_group_name  = each.value.resource_group_name
@@ -168,9 +168,17 @@ data "azurerm_virtual_network" "azurerm_virtual_network_peering" {
 resource "azurerm_role_assignment" "azurerm_virtual_network" {
   for_each = local.virtual_networks_iam
 
-  scope                                  = each.value.scope
-  role_definition_name                   = each.value.role_definition_name
-  principal_id                           = each.value.principal_id
+  scope                = each.value.scope
+  role_definition_name = each.value.role_definition_name
+  principal_id = (
+    contains(keys(azurerm_user_assigned_identity.this), each.value.principal_id)
+    ? azurerm_user_assigned_identity.this[each.value.principal_id].principal_id
+    : (
+      contains(keys(azurerm_windows_virtual_machine.this), each.value.principal_id)
+      ? azurerm_windows_virtual_machine.this[each.value.principal_id].identity.0.principal_id
+      : each.value.principal_id
+    )
+  )
   condition                              = try(each.value.condition, null)
   condition_version                      = try(each.value.condition_version, null)
   delegated_managed_identity_resource_id = try(each.value.delegated_managed_identity_resource_id, null)

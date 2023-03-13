@@ -16,7 +16,16 @@ source_image_reference:
   offer: WindowsServer
   sku: 2019-Datacenter
   version: latest
+boot_diagnostics:
+  storage_account_uri: rg-yaml-euw-01/stdatayaml
+identity:
+  identity_ids:
+    - rg-yaml-euw-01/id-yaml-euw-01
+  type: 'UserAssigned'
 iam:
   Reader:
     jok:
       principal_id: "e1608e24-0728-4efd-ba5b-a05693b53c5a"
+  Contributer:
+    id-yaml-euw-01:
+      principal_id: rg-yaml-euw-01/id-yaml-euw-01

@@ -59,9 +59,17 @@ resource "azurerm_route" "this" {
 resource "azurerm_role_assignment" "azurerm_route_table" {
   for_each = local.route_tables_iam
 
-  scope                                  = each.value.scope
-  role_definition_name                   = each.value.role_definition_name
-  principal_id                           = each.value.principal_id
+  scope                = each.value.scope
+  role_definition_name = each.value.role_definition_name
+  principal_id = (
+    contains(keys(azurerm_user_assigned_identity.this), each.value.principal_id)
+    ? azurerm_user_assigned_identity.this[each.value.principal_id].principal_id
+    : (
+      contains(keys(azurerm_windows_virtual_machine.this), each.value.principal_id)
+      ? azurerm_windows_virtual_machine.this[each.value.principal_id].identity.0.principal_id
+      : each.value.principal_id
+    )
+  )
   condition                              = try(each.value.condition, null)
   condition_version                      = try(each.value.condition_version, null)
   delegated_managed_identity_resource_id = try(each.value.delegated_managed_identity_resource_id, null)

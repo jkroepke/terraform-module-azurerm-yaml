@@ -104,7 +104,12 @@ resource "azurerm_windows_virtual_machine" "this" {
   dynamic "boot_diagnostics" {
     for_each = contains(keys(each.value), "boot_diagnostics") ? { 1 : each.value.boot_diagnostics } : {}
     content {
-      storage_account_uri = try(boot_diagnostics.value.storage_account_uri, null)
+      storage_account_uri = (contains(keys(boot_diagnostics.value), "storage_account_uri")
+        ? (contains(keys(azurerm_storage_account.this), boot_diagnostics.value.storage_account_uri)
+          ? azurerm_storage_account.this[boot_diagnostics.value.storage_account_uri].primary_blob_endpoint
+          : boot_diagnostics.value.storage_account_uri
+        ) : null
+      )
     }
   }
 
@@ -121,8 +126,15 @@ resource "azurerm_windows_virtual_machine" "this" {
   dynamic "identity" {
     for_each = contains(keys(each.value), "identity") ? { 1 : each.value.identity } : {}
     content {
-      identity_ids = try(identity.value.identity_ids, null)
-      type         = identity.value.type
+      identity_ids = (contains(keys(identity.value), "identity_ids")
+        ? [for id in identity.value.identity_ids : (
+          contains(keys(azurerm_user_assigned_identity.this), id)
+          ? azurerm_user_assigned_identity.this[id].id
+          : id
+        )]
+        : null
+      )
+      type = identity.value.type
     }
   }
 

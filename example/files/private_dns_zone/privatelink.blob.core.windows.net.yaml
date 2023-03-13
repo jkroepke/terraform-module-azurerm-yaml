@@ -11,3 +11,6 @@ iam:
   Reader:
     jok:
       principal_id: "e1608e24-0728-4efd-ba5b-a05693b53c5a"
+  Contributer:
+    id-yaml-euw-01:
+      principal_id: rg-yaml-euw-01/id-yaml-euw-01

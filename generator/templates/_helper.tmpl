@@ -11,6 +11,10 @@
         {{- tmpl.Exec "attribute.admin_password" }}
       {{- else if eq $key "subnet_id" }}
         {{- tmpl.Exec "attribute.subnet_id" $prefix }}
+      {{- else if eq $key "identity_ids" }}
+        {{- tmpl.Exec "attribute.identity_ids" $prefix }}
+      {{- else if eq $key "storage_account_uri" }}
+        {{- tmpl.Exec "attribute.storage_account_uri" $prefix }}
       {{- else if eq $key "resource_group_name" }}
         {{- tmpl.Exec "attribute.resource_group_name" }}
       {{- else if eq $key "location" }}
@@ -65,6 +69,7 @@ location = try(each.value.location, (
     : var.default_location
 ))
 {{- end }}
+
 {{- define "attribute.subnet_id" }}
 {{- $prefix := . }}
 subnet_id = (contains(keys(azurerm_subnet.this), {{ $prefix | default "each" }}.value.subnet_id)
@@ -73,15 +78,36 @@ subnet_id = (contains(keys(azurerm_subnet.this), {{ $prefix | default "each" }}.
 )
 {{- end }}
 
+{{- define "attribute.storage_account_uri" }}
+{{- $prefix := . }}
+storage_account_uri = (contains(keys({{ $prefix | default "each" }}.value), "storage_account_uri")
+    ? (contains(keys(azurerm_storage_account.this), {{ $prefix | default "each" }}.value.storage_account_uri)
+      ? azurerm_storage_account.this[{{ $prefix | default "each" }}.value.storage_account_uri].primary_blob_endpoint
+      : {{ $prefix | default "each" }}.value.storage_account_uri
+    ) : null
+)
+{{- end }}
+
 {{- define "attribute.tags" }}
 tags = merge(try(each.value.tags, {}), var.default_tags)
 {{- end }}
-
 
 {{- define "attribute.admin_password" }}
 admin_password = (contains(keys(random_password.this), each.key)
   ? random_password.this[each.key].result
   : each.value.admin_password)
+{{- end }}
+
+{{- define "attribute.identity_ids" }}
+{{- $prefix := . }}
+identity_ids = (contains(keys({{ $prefix | default "each" }}.value), "identity_ids")
+  ? [for id in {{ $prefix | default "each" }}.value.identity_ids: (
+    contains(keys(azurerm_user_assigned_identity.this), id)
+    ? azurerm_user_assigned_identity.this[id].id
+    : id
+  )]
+  : null
+)
 {{- end }}
 
 {{- define "attribute.azurerm_windows_virtual_machine.network_interface_ids" }}
