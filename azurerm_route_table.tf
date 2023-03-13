@@ -5,14 +5,13 @@ locals {
     for name, options in local.route_tables : [
       for role, role_assignments in try(options.iam, {}) : [
         for role_assignment_name, role_assignment in role_assignments : merge({
-          route_table_name     = azurerm_route_table.this[name].name
-          resource_group_name  = azurerm_route_table.this[name].resource_group_name
+          _                    = name
           scope                = azurerm_route_table.this[name].id
           role_definition_name = role
         }, role_assignment)
       ]
     ]
-  ]) : "${role_assignment.resource_group_name}/${role_assignment.route_table_name}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
+  ]) : "${role_assignment._}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
   route_tables_routes = [
     for name, options in local.route_tables : [
       for subname, subresource in try(options.routes, {}) : merge({

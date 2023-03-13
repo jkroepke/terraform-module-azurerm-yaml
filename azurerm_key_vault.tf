@@ -1,12 +1,24 @@
 locals {
-  resource_groups_yaml = [for file in fileset("", "${var.yaml_root}/resource_group/*.yaml") : yamldecode(file(file))]
-  resource_groups      = { for yaml in local.resource_groups_yaml : yaml.name => yaml }
-  resource_groups_iam = { for role_assignment in flatten([
-    for name, options in local.resource_groups : [
+  key_vaults_yaml = [for file in fileset("", "${var.yaml_root}/key_vault/*.yaml") : yamldecode(file(file))]
+  key_vaults = { for yaml in local.key_vaults_yaml : "${yaml.resource_group_name}/${yaml.name}" => merge({
+    tenant_id = data.azurerm_client_config.current.tenant_id
+  }, yaml) }
+  key_vaults_access_policies = { for access_policy in flatten([
+    for name, options in local.user_assigned_identities : [
+      for subname, subresource in try(options.access_policies, {}) : merge({
+        _                   = name
+        name                = subname
+        key_vault_id        = azurerm_key_vault.this[name].id
+        resource_group_name = options.resource_group_name
+      }, subresource)
+    ]
+  ]) : "${access_policy._}/${access_policy.name}" => access_policy }
+  key_vaults_iam = { for role_assignment in flatten([
+    for name, options in local.key_vaults : [
       for role, role_assignments in try(options.iam, {}) : [
         for role_assignment_name, role_assignment in role_assignments : merge({
           _                    = name
-          scope                = azurerm_resource_group.this[name].id
+          scope                = azurerm_key_vault.this[name].id
           role_definition_name = role
         }, role_assignment)
       ]
@@ -14,16 +26,8 @@ locals {
   ]) : "${role_assignment._}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
 }
 
-resource "azurerm_resource_group" "this" {
-  for_each = local.resource_groups
-
-  name     = each.value.name
-  location = try(each.value.location, var.default_location)
-  tags     = merge(try(each.value.tags, {}), var.default_tags)
-}
-
-resource "azurerm_role_assignment" "azurerm_resource_group" {
-  for_each = local.resource_groups_iam
+resource "azurerm_role_assignment" "azurerm_key_vault" {
+  for_each = local.key_vaults_iam
 
   scope                = each.value.scope
   role_definition_name = each.value.role_definition_name

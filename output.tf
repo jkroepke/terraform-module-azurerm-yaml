@@ -1,3 +1,8 @@
+output "azurerm_key_vault" {
+  description = "Output of all key vaults declared in this module as map"
+  value       = azurerm_key_vault.this
+}
+
 output "azurerm_network_security_group" {
   description = "Output of all NSGs declared in this module as map"
   value       = azurerm_network_security_group.this
@@ -23,6 +28,11 @@ output "azurerm_storage_account" {
   value       = azurerm_storage_account.this
 }
 
+output "azurerm_user_assigned_identity" {
+  description = "Output of all user assigned identities in this module as map"
+  value       = azurerm_user_assigned_identity.this
+}
+
 output "azurerm_virtual_network" {
   description = "Output of all virtual networks declared in this module as map"
   value       = azurerm_virtual_network.this
@@ -34,6 +44,6 @@ output "azurerm_subnet" {
 }
 
 output "azurerm_windows_virtual_machine" {
-  description = "Output of all azure virtual machines declared in this module as map"
+  description = "Output of all windows virtual machines declared in this module as map"
   value       = azurerm_windows_virtual_machine.this
 }

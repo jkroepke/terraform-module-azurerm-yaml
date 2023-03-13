@@ -5,23 +5,23 @@ locals {
     for name, options in local.network_security_groups : [
       for role, role_assignments in try(options.iam, {}) : [
         for role_assignment_name, role_assignment in role_assignments : merge({
-          network_security_group_name = azurerm_network_security_group.this[name].name
-          resource_group_name         = azurerm_network_security_group.this[name].resource_group_name
-          scope                       = azurerm_network_security_group.this[name].id
-          role_definition_name        = role
+          _                    = name
+          scope                = azurerm_network_security_group.this[name].id
+          role_definition_name = role
         }, role_assignment)
       ]
     ]
-  ]) : "${role_assignment.resource_group_name}/${role_assignment.network_security_group_name}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
+  ]) : "${role_assignment._}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
   network_security_groups_rules = { for rule in flatten([
     for name, options in local.network_security_groups : [
       for subname, subresource in try(options.rules, {}) : merge({
+        _                           = name
         name                        = subname
         network_security_group_name = azurerm_network_security_group.this[name].name
         resource_group_name         = azurerm_network_security_group.this[name].resource_group_name
       }, subresource)
     ]
-  ]) : "${rule.resource_group_name}/${rule.network_security_group_name}/${rule.name}" => rule }
+  ]) : "${rule._}/${rule.name}" => rule }
 }
 
 resource "azurerm_network_security_group" "this" {

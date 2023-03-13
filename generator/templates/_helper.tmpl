@@ -15,6 +15,8 @@
         {{- tmpl.Exec "attribute.identity_ids" $prefix }}
       {{- else if eq $key "storage_account_uri" }}
         {{- tmpl.Exec "attribute.storage_account_uri" $prefix }}
+      {{- else if eq $key "virtual_network_subnet_ids" }}
+        {{- tmpl.Exec "attribute.virtual_network_subnet_ids" $prefix }}
       {{- else if eq $key "resource_group_name" }}
         {{- tmpl.Exec "attribute.resource_group_name" }}
       {{- else if eq $key "location" }}
@@ -75,6 +77,18 @@ location = try(each.value.location, (
 subnet_id = (contains(keys(azurerm_subnet.this), {{ $prefix | default "each" }}.value.subnet_id)
     ? azurerm_subnet.this[{{ $prefix | default "each" }}.value.subnet_id].id
     : {{ $prefix | default "each" }}.value.subnet_id
+)
+{{- end }}
+
+{{- define "attribute.virtual_network_subnet_ids" }}
+{{- $prefix := . }}
+virtual_network_subnet_ids = (contains(keys({{ $prefix | default "each" }}.value), "virtual_network_subnet_ids")
+  ? [for id in {{ $prefix | default "each" }}.value.virtual_network_subnet_ids: (
+    contains(keys(azurerm_subnet.this), id)
+    ? azurerm_subnet.this[id].id
+    : id
+  )]
+  : null
 )
 {{- end }}
 

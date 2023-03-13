@@ -1,0 +1,3 @@
+name: kv-yaml-euw-01
+resource_group_name: rg-yaml-euw-01
+sku_name: standard

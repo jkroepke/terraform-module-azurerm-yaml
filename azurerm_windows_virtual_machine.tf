@@ -1,40 +1,88 @@
 locals {
   windows_virtual_machines_yaml = [for file in fileset("", "${var.yaml_root}/windows_virtual_machine/*.yaml") : yamldecode(file(file))]
   windows_virtual_machines      = { for yaml in local.windows_virtual_machines_yaml : "${yaml.resource_group_name}/${yaml.name}" => yaml }
-  windows_virtual_machines_iam = { for role_assignment in flatten([
-    for name, options in local.windows_virtual_machines : [
-      for role, role_assignments in try(options.iam, {}) : [
-        for role_assignment_name, role_assignment in role_assignments : merge({
-          windows_virtual_machine_name = azurerm_windows_virtual_machine.this[name].name
-          resource_group_name          = azurerm_windows_virtual_machine.this[name].resource_group_name
-          scope                        = azurerm_windows_virtual_machine.this[name].id
-          role_definition_name         = role
-        }, role_assignment)
+  windows_virtual_machines_iam = {
+    for role_assignment in flatten([
+      for name, options in local.windows_virtual_machines : [
+        for role, role_assignments in try(options.iam, {}) : [
+          for role_assignment_name, role_assignment in role_assignments : merge({
+            _                    = name
+            scope                = azurerm_windows_virtual_machine.this[name].id
+            role_definition_name = role
+          }, role_assignment)
+        ]
       ]
-    ]
-  ]) : "${role_assignment.resource_group_name}/${role_assignment.windows_virtual_machine_name}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
+    ]) : "${role_assignment._}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment
+  }
   windows_virtual_machines_passwords = {
     for name, options in local.windows_virtual_machines : name => null
     if !contains(keys(options), "admin_password")
   }
-  windows_virtual_machines_network_interface = { for nic in flatten([
-    for name, options in local.windows_virtual_machines : [
-      for subname, subresource in try(options.network_interfaces, {}) : merge({
-        name                = subname
-        resource_group_name = options.resource_group_name
-      }, subresource)
-    ]
-  ]) : "${nic.resource_group_name}/${nic.name}" => nic }
+  windows_virtual_machines_network_interface = {
+    for nic in flatten([
+      for name, options in local.windows_virtual_machines : [
+        for subname, subresource in try(options.network_interfaces, {}) : merge(subresource, {
+          name                = subname
+          resource_group_name = options.resource_group_name
+          tags                = merge(try(options.tags, {}), try(subresource.tags, {}))
+        })
+      ]
+    ]) : "${nic.resource_group_name}/${nic.name}" => nic
+  }
+  windows_virtual_machines_network_extension = {
+    for extension in flatten([
+      for name, options in local.windows_virtual_machines : [
+        for subname, subresource in try(options.extensions, {}) : merge(subresource, {
+          _                  = name
+          name               = subname
+          virtual_machine_id = azurerm_windows_virtual_machine.this[name].id
+          tags               = merge(try(options.tags, {}), try(subresource.tags, {}))
+        })
+      ]
+    ]) : "${extension._}/${extension.name}" => extension
+  }
 
   windows_virtual_machines_data_disks = [
     for name, options in local.windows_virtual_machines : [
-      for subname, subresource in try(options.virtual_network_links, {}) : merge({
+      for subname, subresource in try(options.virtual_network_links, {}) : merge(subresource, {
         name                         = subname
         windows_virtual_machine_name = azurerm_windows_virtual_machine.this[name].name
         resource_group_name          = azurerm_windows_virtual_machine.this[name].resource_group_name
-      }, subresource)
+        tags                         = merge(try(options.tags, {}), try(subresource.tags, {}))
+      })
     ]
   ]
+}
+
+resource "azurerm_virtual_machine_extension" "azurerm_windows_virtual_machine" {
+  for_each = local.windows_virtual_machines_network_extension
+
+  name                 = each.value.name
+  virtual_machine_id   = each.value.virtual_machine_id
+  publisher            = each.value.publisher
+  type                 = each.value.type
+  type_handler_version = each.value.type_handler_version
+
+  auto_upgrade_minor_version  = try(each.value.auto_upgrade_minor_version, null)
+  automatic_upgrade_enabled   = try(each.value.automatic_upgrade_enabled, null)
+  failure_suppression_enabled = try(each.value.failure_suppression_enabled, null)
+
+  settings           = try(each.value.settings, null)
+  protected_settings = try(each.value.protected_settings, null)
+
+  dynamic "protected_settings_from_key_vault" {
+    for_each = contains(keys(each.value), "protected_settings_from_key_vault") ? each.value.protected_settings_from_key_vault : {}
+    content {
+      secret_url = protected_settings_from_key_vault.value.secret_url
+      source_vault_id = (
+        contains(keys(azurerm_key_vault.this), protected_settings_from_key_vault.value.source_vault_id)
+        ? azurerm_key_vault.this[protected_settings_from_key_vault.value.source_vault_id].id
+        : protected_settings_from_key_vault.value.source_vault_id
+      )
+    }
+  }
+
+  tags = merge(try(each.value.tags, {}), var.default_tags)
 }
 
 resource "azurerm_role_assignment" "azurerm_windows_virtual_machine" {

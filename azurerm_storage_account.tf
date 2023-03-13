@@ -5,14 +5,13 @@ locals {
     for name, options in local.storage_accounts : [
       for role, role_assignments in try(options.iam, {}) : [
         for role_assignment_name, role_assignment in role_assignments : merge({
-          storage_account_name = azurerm_storage_account.this[name].name
-          resource_group_name  = azurerm_storage_account.this[name].resource_group_name
+          _                    = name
           scope                = azurerm_storage_account.this[name].id
           role_definition_name = role
         }, role_assignment)
       ]
     ]
-  ]) : "${role_assignment.resource_group_name}/${role_assignment.storage_account_name}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
+  ]) : "${role_assignment._}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
   storage_accounts_virtual_network_links = [
     for name, options in local.storage_accounts : [
       for subname, subresource in try(options.virtual_network_links, {}) : merge({

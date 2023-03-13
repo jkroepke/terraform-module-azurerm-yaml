@@ -5,14 +5,13 @@ locals {
     for name, options in local.virtual_networks : [
       for role, role_assignments in try(options.iam, {}) : [
         for role_assignment_name, role_assignment in role_assignments : merge({
-          virtual_network_name = azurerm_virtual_network.this[name].name
-          resource_group_name  = azurerm_virtual_network.this[name].resource_group_name
+          _                    = name
           scope                = azurerm_virtual_network.this[name].id
           role_definition_name = role
         }, role_assignment)
       ]
     ]
-  ]) : "${role_assignment.resource_group_name}/${role_assignment.virtual_network_name}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
+  ]) : "${role_assignment._}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
   virtual_networks_subnets = [
     for name, options in local.virtual_networks : [
       for subname, subresource in try(options.subnets, {}) : merge({

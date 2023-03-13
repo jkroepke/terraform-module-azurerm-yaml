@@ -5,24 +5,24 @@ locals {
     for name, options in local.user_assigned_identities : [
       for role, role_assignments in try(options.iam, {}) : [
         for role_assignment_name, role_assignment in role_assignments : merge({
-          name                 = name
+          _                    = name
           scope                = azurerm_user_assigned_identity.this[name].id
           role_definition_name = role
         }, role_assignment)
       ]
     ]
-  ]) : "${role_assignment.name}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
+  ]) : "${role_assignment._}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
 
   user_assigned_identities_federated_identity_credentials = { for cred in flatten([
     for name, options in local.user_assigned_identities : [
       for subname, subresource in try(options.federated_identity_credentials, {}) : merge({
+        _                   = name
         name                = subname
-        parent_name         = azurerm_user_assigned_identity.this[name].name
         parent_id           = azurerm_user_assigned_identity.this[name].id
-        resource_group_name = options.resource_group_name
+        resource_group_name = azurerm_user_assigned_identity.this[name].resource_group_name
       }, subresource)
     ]
-  ]) : "${cred.resource_group_name}/${cred.parent_name}/${cred.name}" => cred }
+  ]) : "${cred._}/${cred.name}" => cred }
 }
 
 resource "azurerm_user_assigned_identity" "this" {

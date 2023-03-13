@@ -1,0 +1,12 @@
+{{- $azurerm_key_vault := (index (ds "terraform").provider_schemas "registry.terraform.io/hashicorp/azurerm").resource_schemas.azurerm_key_vault -}}
+{{- $azurerm_key_vault_access_policy := (index (ds "terraform").provider_schemas "registry.terraform.io/hashicorp/azurerm").resource_schemas.azurerm_key_vault_access_policy -}}
+
+resource "azurerm_key_vault" "this" {
+  for_each = local.key_vaults
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_storage_account" $azurerm_key_vault "" false) }}
+}
+
+resource "azurerm_key_vault_access_policy" "this" {
+  for_each = local.key_vaults_access_policies
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_storage_account" $azurerm_key_vault_access_policy "" false) }}
+}

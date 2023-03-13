@@ -5,14 +5,13 @@ locals {
     for name, options in local.private_dns_zones : [
       for role, role_assignments in try(options.iam, {}) : [
         for role_assignment_name, role_assignment in role_assignments : merge({
-          private_dns_zone_name = azurerm_private_dns_zone.this[name].name
-          resource_group_name   = azurerm_private_dns_zone.this[name].resource_group_name
-          scope                 = azurerm_private_dns_zone.this[name].id
-          role_definition_name  = role
+          _                    = name
+          scope                = azurerm_private_dns_zone.this[name].id
+          role_definition_name = role
         }, role_assignment)
       ]
     ]
-  ]) : "${role_assignment.resource_group_name}/${role_assignment.private_dns_zone_name}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
+  ]) : "${role_assignment._}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
   private_dns_zones_virtual_network_links = [
     for name, options in local.private_dns_zones : [
       for subname, subresource in try(options.virtual_network_links, {}) : merge({

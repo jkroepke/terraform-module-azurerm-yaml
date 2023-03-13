@@ -135,10 +135,17 @@ resource "azurerm_storage_account" "this" {
   dynamic "network_rules" {
     for_each = contains(keys(each.value), "network_rules") ? { 1 : each.value.network_rules } : {}
     content {
-      bypass                     = try(network_rules.value.bypass, null)
-      default_action             = network_rules.value.default_action
-      ip_rules                   = try(network_rules.value.ip_rules, null)
-      virtual_network_subnet_ids = try(network_rules.value.virtual_network_subnet_ids, null)
+      bypass         = try(network_rules.value.bypass, null)
+      default_action = network_rules.value.default_action
+      ip_rules       = try(network_rules.value.ip_rules, null)
+      virtual_network_subnet_ids = (contains(keys(network_rules.value), "virtual_network_subnet_ids")
+        ? [for id in network_rules.value.virtual_network_subnet_ids : (
+          contains(keys(azurerm_subnet.this), id)
+          ? azurerm_subnet.this[id].id
+          : id
+        )]
+        : null
+      )
 
       dynamic "private_link_access" {
         for_each = contains(keys(network_rules.value), "private_link_access") ? network_rules.value.private_link_access : {}
