@@ -67,8 +67,14 @@ resource "azurerm_virtual_machine_extension" "azurerm_windows_virtual_machine" {
   automatic_upgrade_enabled   = try(each.value.automatic_upgrade_enabled, null)
   failure_suppression_enabled = try(each.value.failure_suppression_enabled, null)
 
-  settings           = try(each.value.settings, null)
-  protected_settings = try(each.value.protected_settings, null)
+  settings = (contains(keys(each.value), "settings")
+    ? jsonencode(each.value.settings)
+    : null
+  )
+  protected_settings = (contains(keys(each.value), "protected_settings")
+    ? jsonencode(each.value.protected_settings)
+    : null
+  )
 
   dynamic "protected_settings_from_key_vault" {
     for_each = contains(keys(each.value), "protected_settings_from_key_vault") ? each.value.protected_settings_from_key_vault : {}
