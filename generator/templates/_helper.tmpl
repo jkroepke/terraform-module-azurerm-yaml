@@ -8,7 +8,7 @@
     {{- range $key, $options := $resource.block.attributes }}
       {{- if eq $key "id" }}
       {{- else if eq $key "admin_password" }}
-        {{- tmpl.Exec "attribute.admin_password" }}
+        {{- tmpl.Exec (printf "attribute.%s.admin_password" $resource_name)  }}
       {{- else if eq $key "subnet_id" }}
         {{- tmpl.Exec "attribute.subnet_id" $prefix }}
       {{- else if eq $key "identity_ids" }}
@@ -24,7 +24,7 @@
       {{- else if eq $key "tags" }}
         {{- tmpl.Exec "attribute.tags" }}
       {{- else if eq $key "network_interface_ids" }}
-        {{- tmpl.Exec (printf "attribute.%s.network_interface_ids" $resource_name) }}
+        {{- tmpl.Exec "attribute.network_interface_ids" $resource_name }}
       {{- else if and (eq $key "name") $multi_block}}
         name = {{ $prefix | default "each" }}.key
       {{- else }}
@@ -106,7 +106,16 @@ storage_account_uri = (contains(keys({{ $prefix | default "each" }}.value), "sto
 tags = merge(try(each.value.tags, {}), var.default_tags)
 {{- end }}
 
-{{- define "attribute.admin_password" }}
+{{- define "attribute.azurerm_linux_virtual_machine.admin_password" }}
+admin_password = (try(each.value.disable_password_authentication, true) == false
+  ? (contains(keys(random_password.this), each.key)
+    ? random_password.this[each.key].result
+    : each.value.admin_password
+  ) : null
+)
+{{- end }}
+
+{{- define "attribute.azurerm_windows_virtual_machine.admin_password" }}
 admin_password = (contains(keys(random_password.this), each.key)
   ? random_password.this[each.key].result
   : each.value.admin_password)
@@ -124,9 +133,10 @@ identity_ids = (contains(keys({{ $prefix | default "each" }}.value), "identity_i
 )
 {{- end }}
 
-{{- define "attribute.azurerm_windows_virtual_machine.network_interface_ids" }}
+{{- define "attribute.network_interface_ids" }}
+{{- $resource_name := . }}
 network_interface_ids = concat(
-  [for nic, _ in local.windows_virtual_machines_network_interface: azurerm_network_interface.azurerm_windows_virtual_machine[nic].id],
+  [for nic, _ in local.{{ $resource_name | replaceAll "azurerm_" "" }}s_network_interface: azurerm_network_interface.{{ $resource_name }}[nic].id],
   try(each.value.network_interface_ids, [])
 )
 {{- end }}

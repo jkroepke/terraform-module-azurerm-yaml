@@ -12,15 +12,70 @@ locals {
       ]
     ]
   ]) : "${role_assignment._}|${role_assignment.role_definition_name}|${role_assignment.principal_id}" => role_assignment }
-  storage_accounts_virtual_network_links = [
+  storage_accounts_private_endpoints = { for private_endpoints in flatten([
     for name, options in local.storage_accounts : [
-      for subname, subresource in try(options.virtual_network_links, {}) : merge({
-        name                 = subname
-        storage_account_name = azurerm_storage_account.this[name].name
-        resource_group_name  = azurerm_storage_account.this[name].resource_group_name
+      for subname, subresource in try(options.private_endpoints, {}) : merge({
+        _                              = name
+        name                           = subname
+        resource_group_name            = subresource.resource_group_name
+        private_connection_resource_id = azurerm_storage_account.this[name].id
       }, subresource)
     ]
-  ]
+  ]) : "${private_endpoints._}/${private_endpoints.name}" => private_endpoints }
+}
+
+resource "azurerm_private_endpoint" "azurerm_storage_account" {
+  for_each = local.storage_accounts_private_endpoints
+
+  name = each.value.name
+  subnet_id = (contains(keys(azurerm_subnet.this), each.value.subnet_id)
+    ? azurerm_subnet.this[each.value.subnet_id].id
+    : each.value.subnet_id
+  )
+  custom_network_interface_name = try(each.value.custom_network_interface_name, null)
+
+  private_service_connection {
+    name                           = each.value.private_service_connection.name
+    is_manual_connection           = try(each.value.private_service_connection.is_manual_connection, null)
+    private_connection_resource_id = each.value.private_connection_resource_id
+  }
+
+  dynamic "private_dns_zone_group" {
+    for_each = contains(keys(each.value), "private_dns_zone_group") ? { 1 : each.value.private_dns_zone_group } : {}
+    content {
+      name = private_dns_zone_group.value.name
+      private_dns_zone_ids = [
+        for id in private_dns_zone_group.value.private_dns_zone_ids : (
+          contains(keys(azurerm_private_dns_zone.this), id)
+          ? azurerm_private_dns_zone.this[id].id
+          : id
+        )
+      ]
+    }
+  }
+
+  dynamic "ip_configuration" {
+    for_each = contains(keys(each.value), "ip_configuration") ? { 1 : each.value.ip_configuration } : {}
+    content {
+      name               = ip_configuration.value.name
+      private_ip_address = ip_configuration.value.private_ip_address
+      subresource_name   = try(ip_configuration.value.subresource_name, null)
+      member_name        = try(ip_configuration.value.member_name, null)
+    }
+  }
+
+  resource_group_name = (
+    contains(keys(azurerm_resource_group.this), each.value.resource_group_name)
+    ? azurerm_resource_group.this[each.value.resource_group_name].name
+    : each.value.resource_group_name
+  )
+
+  location = try(each.value.location, (
+    contains(keys(azurerm_resource_group.this), each.value.resource_group_name)
+    ? azurerm_resource_group.this[each.value.resource_group_name].location
+    : var.default_location
+  ))
+  tags = merge(try(each.value.tags, {}), var.default_tags)
 }
 
 resource "azurerm_role_assignment" "azurerm_storage_account" {

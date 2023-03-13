@@ -1,0 +1,44 @@
+name: vm-yl-euw-02
+resource_group_name: rg-yaml-euw-02
+size: Standard_B2s
+admin_username: azureadmin
+admin_ssh_key:
+  azureadmin:
+    username: azureadmin
+    public_key: |-
+      ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCpNmPcScu9AHK6aAVCc5+hxTlv34e1vzyS+1kbbRxOX7XUQ19ko/tSh5xfn2ZySgML6vtRXmJ7vjZ9N6YAgQQ8eSwGDgR9+AJBv0OmPPiPQ9b6XjDS0EC3QOc+PxNIAv/A42TLjJzKq/BSaEPl1B2XA5eyi5TnW+CzijaT9bBrIM3KFGLCAGhGj5uwd0c995VUBjAet4m6bJ2tzvC/BdeMkz+Q2ASU6f0LNm2a6u1q620140Cr3b8vL9UKk9/pUCLYJVBv71ZB5G4KBnhBdL6ZgkQvBDPRDzpWqiUMdZXyuhfWcLrlQdLwvd0+rG9xm6/ZQEHXDR6xbj/X9fn9Yoyv
+network_interfaces:
+  default:
+    ip_configuration:
+      default:
+        private_ip_address_allocation: Dynamic
+        subnet_id: rg-yaml-euw-01/vnet-yaml-euw-01/subnet2
+os_disk:
+  caching: ReadWrite
+  storage_account_type: Standard_LRS
+source_image_reference:
+  publisher: Canonical
+  offer: 0001-com-ubuntu-server-jammy
+  sku: 22_04-lts-gen2
+  version: latest
+  # ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCpNmPcScu9AHK6aAVCc5+hxTlv34e1vzyS+1kbbRxOX7XUQ19ko/tSh5xfn2ZySgML6vtRXmJ7vjZ9N6YAgQQ8eSwGDgR9+AJBv0OmPPiPQ9b6XjDS0EC3QOc+PxNIAv/A42TLjJzKq/BSaEPl1B2XA5eyi5TnW+CzijaT9bBrIM3KFGLCAGhGj5uwd0c995VUBjAet4m6bJ2tzvC/BdeMkz+Q2ASU6f0LNm2a6u1q620140Cr3b8vL9UKk9/pUCLYJVBv71ZB5G4KBnhBdL6ZgkQvBDPRDzpWqiUMdZXyuhfWcLrlQdLwvd0+rG9xm6/ZQEHXDR6xbj/X9fn9Yoyv jkr@adorsys.de
+boot_diagnostics:
+  storage_account_uri: rg-yaml-euw-01/stdatayaml
+identity:
+  identity_ids:
+    - rg-yaml-euw-01/id-yaml-euw-01
+  type: 'UserAssigned'
+extensions:
+  example:
+    publisher: "Microsoft.Azure.Extensions"
+    type: "CustomScript"
+    type_handler_version: "2.0"
+    settings:
+      commandToExecute: "hostname && uptime"
+iam:
+  Reader:
+    jok:
+      principal_id: "e1608e24-0728-4efd-ba5b-a05693b53c5a"
+  Contributer:
+    id-yaml-euw-01:
+      principal_id: rg-yaml-euw-01/id-yaml-euw-01

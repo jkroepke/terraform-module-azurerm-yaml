@@ -1,6 +1,6 @@
 locals {
   private_dns_zones_yaml = [for file in fileset("", "${var.yaml_root}/private_dns_zone/*.yaml") : yamldecode(file(file))]
-  private_dns_zones      = { for yaml in local.private_dns_zones_yaml : "${yaml.name}/${yaml.resource_group_name}" => yaml }
+  private_dns_zones      = { for yaml in local.private_dns_zones_yaml : "${yaml.resource_group_name}/${yaml.name}" => yaml }
   private_dns_zones_iam = { for role_assignment in flatten([
     for name, options in local.private_dns_zones : [
       for role, role_assignments in try(options.iam, {}) : [
