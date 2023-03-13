@@ -1,5 +1,28 @@
+[![CI](https://github.com/jkroepke/terraform-modoule-azurerm-yaml/workflows/CI/badge.svg)](https://github.com/jkroepke/terraform-modoule-azurerm-yaml/)
+[![License](https://img.shields.io/github/license/jkroepke/terraform-modoule-azurerm-yaml.svg)](https://github.com/jkroepke/terraform-modoule-azurerm-yaml/blob/main/LICENSE)
+[![Current Release](https://img.shields.io/github/release/jkroepke/terraform-modoule-azurerm-yaml.svg)](https://github.com/jkroepke/terraform-modoule-azurerm-yaml/releases/latest)
+[![GitHub all releases](https://img.shields.io/github/downloads/jkroepke/terraform-modoule-azurerm-yaml/total?logo=github)](https://github.com/jkroepke/terraform-modoule-azurerm-yaml/releases/latest)
+[![GitHub issues](https://img.shields.io/github/issues/jkroepke/terraform-modoule-azurerm-yaml.svg)](https://github.com/jkroepke/terraform-modoule-azurerm-yaml/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/jkroepke/terraform-modoule-azurerm-yaml.svg)](https://github.com/jkroepke/terraform-modoule-azurerm-yaml/pulls)
+
 # terraform-module-azurerm-yaml
-Terraform module for describing resources as YAML file
+
+Terraform module for describing resources as YAML file.
+
+Take a look at the [example](./example) folder to see this module in action.
+
+## Support Matrix
+
+* Resource Groups
+* Virtual Network
+  * Subnet
+  * Peerings
+* Private DNS Zone
+  * Virtual Network links
+* Route Tables
+* Storage Account
+* Network Security Groups
+* Windows Virtual Machines
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -14,42 +37,6 @@ Terraform module for describing resources as YAML file
 |------|---------|
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 3.47 |
 | <a name="provider_random"></a> [random](#provider\_random) | n/a |
-
-## Modules
-
-No modules.
-
-## Resources
-
-| Name | Type |
-|------|------|
-| [azurerm_network_interface.azurerm_windows_virtual_machine](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_interface) | resource |
-| [azurerm_network_security_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) | resource |
-| [azurerm_network_security_rule.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule) | resource |
-| [azurerm_private_dns_zone.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) | resource |
-| [azurerm_private_dns_zone_virtual_network_link.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) | resource |
-| [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
-| [azurerm_role_assignment.azurerm_network_security_group](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.azurerm_private_dns_zone](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.azurerm_resource_group](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.azurerm_route_table](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.azurerm_storage_account](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.azurerm_virtual_network](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.azurerm_windows_virtual_machine](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_route.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/route) | resource |
-| [azurerm_route_table.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/route_table) | resource |
-| [azurerm_storage_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account) | resource |
-| [azurerm_subnet.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
-| [azurerm_subnet_route_table_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_route_table_association) | resource |
-| [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) | resource |
-| [azurerm_virtual_network_peering.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_peering) | resource |
-| [azurerm_windows_virtual_machine.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine) | resource |
-| [random_password.this](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
-| [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
-| [azurerm_route_table.subnet_route_table_association](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/route_table) | data source |
-| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
-| [azurerm_virtual_network.azurerm_private_dns_zone_virtual_network_link](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
-| [azurerm_virtual_network.azurerm_virtual_network_peering](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
 ## Inputs
 

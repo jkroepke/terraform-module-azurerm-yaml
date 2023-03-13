@@ -33,7 +33,3 @@ resource "azurerm_role_assignment" "azurerm_resource_group" {
   delegated_managed_identity_resource_id = try(each.value.delegated_managed_identity_resource_id, null)
   skip_service_principal_aad_check       = try(each.value.skip_service_principal_aad_check, null)
 }
-
-output "azurerm_resource_groups" {
-  value = azurerm_resource_group.this
-}

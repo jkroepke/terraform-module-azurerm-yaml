@@ -48,7 +48,3 @@ resource "azurerm_role_assignment" "azurerm_windows_virtual_machine" {
   delegated_managed_identity_resource_id = try(each.value.delegated_managed_identity_resource_id, null)
   skip_service_principal_aad_check       = try(each.value.skip_service_principal_aad_check, null)
 }
-
-output "azurerm_windows_virtual_machine" {
-  value = azurerm_windows_virtual_machine.this
-}
