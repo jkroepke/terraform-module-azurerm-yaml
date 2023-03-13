@@ -14,6 +14,8 @@ Take a look at the [example](./example) folder to see this module in action.
 ## Support Matrix
 
 * Resource Groups
+* Key Vault
+  * Access Policies
 * Virtual Network
   * Subnet
   * Peerings
@@ -23,6 +25,7 @@ Take a look at the [example](./example) folder to see this module in action.
 * Storage Account
 * Network Security Groups
 * Windows Virtual Machines
+  * Extensions
 * User Assigned Identity 
 
 <!-- BEGIN_TF_DOCS -->
