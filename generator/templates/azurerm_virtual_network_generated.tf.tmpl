@@ -1,0 +1,15 @@
+{{- $azurerm_virtual_network := (index (ds "terraform").provider_schemas "registry.terraform.io/hashicorp/azurerm").resource_schemas.azurerm_virtual_network -}}
+{{- $azurerm_subnet := (index (ds "terraform").provider_schemas "registry.terraform.io/hashicorp/azurerm").resource_schemas.azurerm_subnet -}}
+
+resource "azurerm_virtual_network" "this" {
+  for_each = local.windows_virtual_machines_network_interface
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_network_interface" $azurerm_virtual_network "" false) }}
+}
+
+resource "azurerm_subnet" "this" {
+  for_each = {
+    for subnet in flatten(local.virtual_networks_subnets) : "${subnet.resource_group_name}/${subnet.virtual_network_name}/${subnet.name}" => subnet
+  }
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_network_interface" $azurerm_subnet "" false) }}
+}
+

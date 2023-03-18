@@ -24,7 +24,10 @@ resource "azurerm_network_interface" "azurerm_linux_virtual_machine" {
       private_ip_address                                 = try(ip_configuration.value.private_ip_address, null)
       private_ip_address_allocation                      = ip_configuration.value.private_ip_address_allocation
       private_ip_address_version                         = try(ip_configuration.value.private_ip_address_version, null)
-      public_ip_address_id                               = try(ip_configuration.value.public_ip_address_id, null)
+      public_ip_address_id = (contains(keys(azurerm_public_ip.this), ip_configuration.value.public_ip_address_id)
+        ? azurerm_public_ip.this[ip_configuration.value.public_ip_address_id].id
+        : ip_configuration.value.public_ip_address_id
+      )
       subnet_id = (contains(keys(azurerm_subnet.this), ip_configuration.value.subnet_id)
         ? azurerm_subnet.this[ip_configuration.value.subnet_id].id
         : ip_configuration.value.subnet_id

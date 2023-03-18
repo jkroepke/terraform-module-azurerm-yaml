@@ -35,60 +35,6 @@ locals {
   }
 }
 
-resource "azurerm_virtual_network" "this" {
-  for_each = local.virtual_networks
-
-  name          = each.value.name
-  address_space = each.value.address_space
-  dns_servers   = try(each.value.dns_servers, null)
-
-  resource_group_name = (
-    contains(keys(azurerm_resource_group.this), each.value.resource_group_name)
-    ? azurerm_resource_group.this[each.value.resource_group_name].name
-    : each.value.resource_group_name
-  )
-
-  location = try(each.value.location, (
-    contains(keys(azurerm_resource_group.this), each.value.resource_group_name)
-    ? azurerm_resource_group.this[each.value.resource_group_name].location
-    : var.default_location
-  ))
-  tags = merge(try(each.value.tags, {}), var.default_tags)
-}
-
-resource "azurerm_subnet" "this" {
-  for_each = {
-    for subnet in flatten(local.virtual_networks_subnets) : "${subnet.resource_group_name}/${subnet.virtual_network_name}/${subnet.name}" => subnet
-  }
-
-  address_prefixes     = each.value.address_prefixes
-  name                 = each.value.name
-  resource_group_name  = each.value.resource_group_name
-  virtual_network_name = each.value.virtual_network_name
-
-  enforce_private_link_endpoint_network_policies = try(each.value.enforce_private_link_endpoint_network_policies, null)
-  enforce_private_link_service_network_policies  = try(each.value.enforce_private_link_service_network_policies, null)
-  private_endpoint_network_policies_enabled      = try(each.value.private_endpoint_network_policies_enabled, null)
-  private_link_service_network_policies_enabled  = try(each.value.private_link_service_network_policies_enabled, null)
-
-  dynamic "delegation" {
-    for_each = try(each.value.delegations, {})
-
-    content {
-      name = delegation.key
-
-      dynamic "service_delegation" {
-        for_each = try(delegation.value.services, {})
-
-        content {
-          name    = service_delegation.key
-          actions = service_delegation.value.actions
-        }
-      }
-    }
-  }
-}
-
 resource "azurerm_subnet_route_table_association" "this" {
   for_each = {
     for subnet in flatten(local.virtual_networks_subnets) :

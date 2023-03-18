@@ -16,7 +16,7 @@ locals {
   }
   linux_virtual_machines_passwords = {
     for name, options in local.linux_virtual_machines : name => null
-    if (try(options.disable_password_authentication, true) == false && !contains(keys(options), "admin_password"))
+    if(try(options.disable_password_authentication, true) == false && !contains(keys(options), "admin_password"))
   }
   linux_virtual_machines_network_interface = {
     for nic in flatten([
@@ -45,10 +45,10 @@ locals {
   linux_virtual_machines_data_disks = [
     for name, options in local.linux_virtual_machines : [
       for subname, subresource in try(options.virtual_network_links, {}) : merge(subresource, {
-        name                         = subname
+        name                       = subname
         linux_virtual_machine_name = azurerm_linux_virtual_machine.this[name].name
-        resource_group_name          = azurerm_linux_virtual_machine.this[name].resource_group_name
-        tags                         = merge(try(options.tags, {}), try(subresource.tags, {}))
+        resource_group_name        = azurerm_linux_virtual_machine.this[name].resource_group_name
+        tags                       = merge(try(options.tags, {}), try(subresource.tags, {}))
       })
     ]
   ]

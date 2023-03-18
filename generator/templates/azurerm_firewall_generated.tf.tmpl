@@ -1,0 +1,24 @@
+{{- $azurerm_firewall := (index (ds "terraform").provider_schemas "registry.terraform.io/hashicorp/azurerm").resource_schemas.azurerm_firewall -}}
+{{- $azurerm_firewall_policy := (index (ds "terraform").provider_schemas "registry.terraform.io/hashicorp/azurerm").resource_schemas.azurerm_firewall_policy -}}
+{{- $azurerm_firewall_policy_rule_collection_group := (index (ds "terraform").provider_schemas "registry.terraform.io/hashicorp/azurerm").resource_schemas.azurerm_firewall_policy_rule_collection_group -}}
+{{- $azurerm_web_application_firewall_policy := (index (ds "terraform").provider_schemas "registry.terraform.io/hashicorp/azurerm").resource_schemas.azurerm_web_application_firewall_policy -}}
+
+resource "azurerm_firewall" "this" {
+  for_each = local.firewalls
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_network_interface" $azurerm_firewall "" false) }}
+}
+
+resource "azurerm_firewall_policy" "this" {
+  for_each = local.firewalls
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_network_interface" $azurerm_firewall_policy "" false) }}
+}
+
+resource "azurerm_firewall_policy_rule_collection_group" "this" {
+  for_each = local.firewalls
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_network_interface" $azurerm_firewall_policy_rule_collection_group "" false) }}
+}
+
+resource "azurerm_web_application_firewall_policy" "this" {
+  for_each = local.firewalls
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_network_interface" $azurerm_web_application_firewall_policy "" false) }}
+}

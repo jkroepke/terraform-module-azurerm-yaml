@@ -1,0 +1,6 @@
+{{- $azurerm_public_ip := (index (ds "terraform").provider_schemas "registry.terraform.io/hashicorp/azurerm").resource_schemas.azurerm_public_ip -}}
+
+resource "azurerm_public_ip" "this" {
+  for_each = local.public_ips
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_network_interface" $azurerm_public_ip "" false) }}
+}
