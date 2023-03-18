@@ -55,7 +55,7 @@ resource "azurerm_federated_identity_credential" "this" {
   subject             = each.value.subject
 }
 
-resource "azurerm_role_assignment" "this" {
+resource "azurerm_role_assignment" "azurerm_user_assigned_identity" {
   for_each = local.user_assigned_identities_iam
 
   scope                = each.value.scope

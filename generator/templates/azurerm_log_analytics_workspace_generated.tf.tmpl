@@ -1,0 +1,12 @@
+{{- $azurerm_log_analytics_workspace := (index (ds "terraform").provider_schemas "registry.terraform.io/hashicorp/azurerm").resource_schemas.azurerm_log_analytics_workspace -}}
+{{- $azurerm_log_analytics_solution := (index (ds "terraform").provider_schemas "registry.terraform.io/hashicorp/azurerm").resource_schemas.azurerm_log_analytics_solution -}}
+
+resource "azurerm_log_analytics_workspace" "this" {
+  for_each = local.log_analytics_workspaces
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_log_analytics_workspace" $azurerm_log_analytics_workspace "" false) }}
+}
+
+resource "azurerm_log_analytics_solution" "this" {
+  for_each = local.log_analytics_workspaces_solutions
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_log_analytics_solution" $azurerm_log_analytics_solution "" false) }}
+}

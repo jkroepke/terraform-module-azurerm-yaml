@@ -18,7 +18,9 @@
       {{- else if eq $key "virtual_network_subnet_ids" }}
         {{- tmpl.Exec "attribute.virtual_network_subnet_ids" $prefix }}
       {{- else if eq $key "public_ip_address_id" $prefix }}
-        {{- tmpl.Exec "attribute.public_ip_address_id" $prefix }}
+        {{- tmpl.Exec "attribute.public_ip_address_id" (coll.Slice $prefix (has $options "optional")) }}
+      {{- else if and (eq $key "firewall_policy_id") (eq $resource_name "azurerm_firewall") }}
+        {{- tmpl.Exec "attribute.firewall_policy_id" }}
       {{- else if eq $key "resource_group_name" }}
         {{- tmpl.Exec "attribute.resource_group_name" }}
       {{- else if eq $key "location" }}
@@ -143,11 +145,34 @@ network_interface_ids = concat(
 )
 {{- end }}
 
+{{- define "attribute.firewall_policy_id" }}
+firewall_policy_id = (contains(keys(each.value), "firewall_policy_id")
+  ? (contains(keys(azurerm_firewall_policy.this), each.value.firewall_policy_id)
+    ? azurerm_firewall_policy.this[each.value.firewall_policy_id]
+    : each.value.firewall_policy_id
+  )
+  : (contains(keys(each.value), "policy")
+    ? azurerm_firewall_policy.this["${each.key}/${each.value.policy.name}"].id
+    : null
+  )
+)
+{{- end }}
+
 {{- define "attribute.public_ip_address_id" }}
 {{- $prefix := . }}
+{{- $prefix := (index . 0) }}
+{{- $optional := (index . 1) }}
+{{- if $optional }}
+public_ip_address_id = (contains(keys({{ $prefix | default "each" }}.value), "public_ip_address_id")
+  ? (contains(keys(azurerm_public_ip.this), {{ $prefix | default "each" }}.value.public_ip_address_id)
+    ? azurerm_public_ip.this[{{ $prefix | default "each" }}.value.public_ip_address_id].id
+    : {{ $prefix | default "each" }}.value.public_ip_address_id
+  ) : null
+)
+{{- else }}
 public_ip_address_id = (contains(keys(azurerm_public_ip.this), {{ $prefix | default "each" }}.value.public_ip_address_id)
   ? azurerm_public_ip.this[{{ $prefix | default "each" }}.value.public_ip_address_id].id
   : {{ $prefix | default "each" }}.value.public_ip_address_id
 )
 {{- end }}
-
+{{- end }}

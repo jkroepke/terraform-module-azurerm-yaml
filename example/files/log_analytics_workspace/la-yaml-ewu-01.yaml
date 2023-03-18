@@ -1,0 +1,8 @@
+name: la-yaml-ewu-01
+resource_group_name: rg-yaml-euw-01
+sku: PerGB2018
+solutions:
+  ContainerInsights:
+    plan:
+      publisher: "Microsoft"
+      product: "OMSGallery/ContainerInsights"

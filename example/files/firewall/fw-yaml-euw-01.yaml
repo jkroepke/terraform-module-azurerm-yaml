@@ -1,0 +1,23 @@
+name: fw-yaml-euw-01
+resource_group_name: rg-yaml-euw-01
+sku_name: AZFW_VNet
+sku_tier: Basic
+ip_configuration:
+  public:
+    public_ip_address_id: rg-yaml-euw-01/pip-yaml-euw-02
+    subnet_id: rg-yaml-euw-01/vnet-yaml-euw-01/subnet2
+policy:
+  name: example-fwpolicy
+  rule_collection_groups:
+    base:
+      priority: 400
+      network_rule_collection:
+        network_rule_collection1:
+          priority: 400
+          action: "Deny"
+          rule:
+            network_rule_collection1_rule1:
+              protocols: ["TCP", "UDP"]
+              source_addresses: ["10.0.0.1"]
+              destination_addresses: ["192.168.1.1", "192.168.1.2"]
+              destination_ports: ["80", "1000-2000"]

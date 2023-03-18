@@ -2,5 +2,5 @@
 
 resource "azurerm_public_ip" "this" {
   for_each = local.public_ips
-  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_network_interface" $azurerm_public_ip "" false) }}
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_public_ip" $azurerm_public_ip "" false) }}
 }

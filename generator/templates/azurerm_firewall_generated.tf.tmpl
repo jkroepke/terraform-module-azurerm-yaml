@@ -5,20 +5,15 @@
 
 resource "azurerm_firewall" "this" {
   for_each = local.firewalls
-  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_network_interface" $azurerm_firewall "" false) }}
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_firewall" $azurerm_firewall "" false) }}
 }
 
 resource "azurerm_firewall_policy" "this" {
-  for_each = local.firewalls
-  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_network_interface" $azurerm_firewall_policy "" false) }}
+  for_each = local.firewalls_policies
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_firewall_policy" $azurerm_firewall_policy "" false) }}
 }
 
 resource "azurerm_firewall_policy_rule_collection_group" "this" {
-  for_each = local.firewalls
-  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_network_interface" $azurerm_firewall_policy_rule_collection_group "" false) }}
-}
-
-resource "azurerm_web_application_firewall_policy" "this" {
-  for_each = local.firewalls
-  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_network_interface" $azurerm_web_application_firewall_policy "" false) }}
+  for_each = local.firewalls_policy_rule_collection_groups
+  {{ tmpl.Exec "resource_attributes" (coll.Slice "azurerm_firewall_policy_rule_collection_group" $azurerm_firewall_policy_rule_collection_group "" false) }}
 }
